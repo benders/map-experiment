@@ -11,17 +11,40 @@
     crossorigin=""></script>
 
   <style>
-    #map { height: 800px; }
+    #map { height: 700px; }
   </style>
 </head>
 <body>
  <div id="map"></div>
+ <input type="button" id="download" value="Download" />
   <script type="module">
     var map = L.map('map').setView([
       45.3815694,
       -122.6361778
     ], 15);
-    console.log("Foo bar baz")
+
+    function onMapClick(e) {
+      console.log("You clicked the map at " + e.latlng);
+      L.circle(e.latlng, {
+            color: 'green',
+            fillColor: 'green',
+            fillOpacity: 0.5,
+            radius: 15
+          }).addTo(map)
+      walks["New Trail"].push([e.latlng.lat, e.latlng.lng]);
+    }
+    map.on('click', onMapClick);
+    
+    function download(filename, contents) {
+      var element = document.createElement('a');
+      element.setAttribute('href', 'data:application/json;charset=utf-8, ' + encodeURIComponent(contents));
+      element.setAttribute('download', filename);
+      document.body.appendChild(element);
+      element.click();
+    }
+    document.getElementById("download").addEventListener("click", function() {
+      download("walks.json", JSON.stringify(walks, null, 2));
+    });
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
@@ -30,15 +53,9 @@
         zoomOffset: -1
     }).addTo(map);
 
-    var mark = L.circle([45.3799944, -122.6353694], {
-      color: 'red',
-      fillColor: '#f03',
-      fillOpacity: 0.5,
-      radius: 25
-    }).addTo(map);
-
     var walksUrl = 'https://nicbenders.com/map-experiment/walks.json'
     var walks = await fetch(walksUrl).then( (res) => res.json() );
+    walks["New Trail"] ||= [];
     console.log(walks);
 
     // walks.forEach( (trail) => console.log(trail) );
@@ -49,10 +66,12 @@
               color: 'red',
               fillColor: '#f03',
               fillOpacity: 0.5,
-              radius: 25
+              radius: 15
             }).addTo(map);
       } )
     }
+    
+    
   </script>
 </body>
 </html>
